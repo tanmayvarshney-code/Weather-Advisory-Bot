@@ -1,7 +1,17 @@
+"""
+sop_engine.py
+-------------
+Deterministic SOP (Standard Operating Procedure) evaluation engine.
+
+Loads policy rules from sops.json dynamically on every query — no code changes
+are required to add, update, or remove SOPs. Rules are ranked by severity
+(CRITICAL > HIGH > MEDIUM > LOW) before being surfaced to the LLM.
+"""
 import json
 import os
 from typing import List, Dict, Any, Optional
 from weather_service import WeatherData
+
 
 SEVERITY_WEIGHTS = {
     "CRITICAL": 4,
