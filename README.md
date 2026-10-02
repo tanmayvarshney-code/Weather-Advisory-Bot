@@ -1,153 +1,278 @@
-﻿# 🌤️ Weather Advisory Support Bot
+# Weather Advisory Bot
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![LangGraph](https://img.shields.io/badge/LangGraph-Powered-green) ![Groq](https://img.shields.io/badge/LLM-Groq%20LLaMA--3.3--70B-orange)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![LangGraph](https://img.shields.io/badge/LangGraph-Powered-green)
+![Groq LLM](https://img.shields.io/badge/LLM-Groq%20LLaMA--3.3--70B-orange)
 
-# ðŸŒ¤ï¸ Weather Advisory Support Bot
+A production-grade **Weather Advisory Bot** powered by a **LangGraph agent**, the **Open-Meteo live weather API**, **Groq LLM (LLaMA-3.3 70B)**, and **strictly grounded Standard Operating Procedures (SOPs)**.
 
-A production-grade Weather Advisory Support Bot powered by a **LangGraph agent**, **Open-Meteo live weather API**, **Groq LLM (LLaMA-3.3 70B)**, and **strictly grounded Standard Operating Procedures (SOPs)**.
-
----
-
-## ðŸ“¦ Project Overview
-
-This project includes:
-
-1. **Standalone Repository** â€” Clean, modular codebase containing backend agent logic, API wrapper, SOP engine, and a Streamlit frontend.
-2. **Complete Setup & Run Guide** â€” Instructions for running both the frontend chat application and the evaluation suite.
-3. **Declarative SOP Representation (`sops.json`)** â€” Safety policies are stored as a declarative JSON schema, fully decoupled from application control flow. This allows policy teams to add, update, or remove an SOP live â€” without modifying any Python code or introducing execution regressions.
-4. **LangGraph Implementation (`agent.py`)** â€” A real state graph with conditional branching (`route_after_weather`, `route_after_sop`) and session-level conversational memory.
-5. **Evaluation Suite (`eval_suite.py`)** â€” 8 comprehensive test cases covering all required scenarios, with 100% pass results and honest technical notes on live weather variability.
+The bot never invents weather forecasts or safety advice. Every response is grounded in real-time API data and written policy rules stored in `sops.json`.
 
 ---
 
-## ðŸŽ¯ Architecture Overview & Design Rationale
+## Table of Contents
 
-### 1. Hard Separation of Concerns: Code vs. Policy vs. Model
-- **Deterministic SOP Engine (`sop_engine.py`)**: All safety advice logic is governed by written SOPs stored in `sops.json`. The bot is **strictly forbidden** from inventing generic advice or making ungrounded safety claims.
-- **Dynamic Policy Loading**: SOP policies exist as a JSON data file (`sops.json`). **Adding, updating, or removing an SOP requires ZERO code changes.**
-- **Model Role (Groq LLM)**: The LLM only composes natural language output based on **exact API weather numbers** and the **prescribed guidance of matched SOPs**. The LLM never invents weather forecasts or makes up safety policies.
+- [Features](#features)
+- [Architecture Overview](#architecture-overview)
+- [LangGraph Graph Structure](#langgraph-graph-structure)
+- [SOP Rule Set](#sop-rule-set)
+- [Setup & Installation](#setup--installation)
+- [Running the App](#running-the-app)
+- [Evaluation Suite](#evaluation-suite)
+- [Adding a New SOP](#adding-a-new-sop)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## ðŸ§  LangGraph Graph Structure & Branching Logic
+## Features
 
-The decision flow is built as a state graph using **LangGraph**:
+- **Live Weather Data** — Fetches real-time conditions (temperature, wind speed, UV index, precipitation, humidity) from the [Open-Meteo API](https://open-meteo.com/) using geocoding for any city worldwide.
+- **Deterministic Safety Policies** — 11 SOPs across 5 categories govern all advice. Policies are stored as pure JSON (`sops.json`) — zero code changes needed to add, update, or remove a rule.
+- **LangGraph State Graph** — Multi-node graph with conditional branching and session-level conversational memory (follow-up queries like *"What about this evening instead?"* work seamlessly).
+- **Honest Failure Modes** — The bot explicitly states when weather data is unavailable or when no SOP applies. It never guesses or hallucinates.
+- **Adversarial Prompt Injection Resistance** — Verified in the evaluation suite (Test 6.0).
+- **Streamlit Chat UI** — Conversational frontend with live weather data panel and SOP citation display.
+
+---
+
+## Architecture Overview
+
+### Design Principle: Hard Separation of Concerns
+
+| Layer | Responsibility |
+|-------|---------------|
+| **`sops.json`** | Safety policy data — pure JSON, no code |
+| **`sop_engine.py`** | Deterministic rule evaluation and severity ranking |
+| **`weather_service.py`** | Open-Meteo geocoding + forecast API wrapper |
+| **`agent.py`** | LangGraph state graph — orchestrates intent, weather, and SOP |
+| **`app.py`** | Streamlit chat frontend |
+| **`eval_suite.py`** | Automated evaluation suite — 8 test cases |
+
+**The LLM's role is constrained:** it only composes natural language output from exact API weather numbers and the prescribed guidance of matched SOPs. It never invents weather forecasts or safety policies.
+
+**SOPs are hot-reloadable:** editing `sops.json` takes effect immediately on the next query — no Python changes, no restart.
+
+---
+
+## LangGraph Graph Structure
 
 ```
-                  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                  â”‚      (START)           â”‚
-                  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                             â”‚
-                  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                  â”‚  extract_intent_node   â”‚  (Extract location & activity from history)
-                  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                             â”‚
-                  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                  â”‚   fetch_weather_node   â”‚  (Open-Meteo Geocoding + Live Forecast API)
-                  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                             â”‚
-                [route_after_weather?]
-                 /                     \
-      (Success) /                       \ (API / Geocoding Error)
-               â–¼                         â–¼
-    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-    â”‚ match_sop_node   â”‚    â”‚ render_weather_error    â”‚ â”€â”€â”€â–º [END]
-    â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-             â”‚
-     [route_after_sop?]
-      /               \
- (Match Found)         \ (No SOP Matches)
-    â–¼                   â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ generate_sop_response â”‚  â”‚     render_no_sop       â”‚ â”€â”€â”€â–º [END]
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-            â”‚
-            â–¼
+               +--------------------------+
+               |         (START)          |
+               +------------+-------------+
+                            |
+               +------------v-------------+
+               |   extract_intent_node    |  <- Parses location & activity
+               +------------+-------------+   from conversation history
+                            |
+               +------------v-------------+
+               |   fetch_weather_node     |  <- Open-Meteo Geocoding API
+               +------------+-------------+     + Live Forecast API
+                            |
+              [route_after_weather?]
+               /                        \
+   (Success) /                           \ (API / Geocoding Error)
+            v                             v
+ +-------------------+       +------------------------+
+ |  match_sop_node   |       |  render_weather_error  | -> [END]
+ +--------+----------+       +------------------------+
+          |
+  [route_after_sop?]
+   /               \
+(Match)             (No Match)
+  v                    v
++------------------------+  +------------------------+
+| generate_sop_response  |  |     render_no_sop      | -> [END]
++----------+-------------+  +------------------------+
+           |
+           v
          [END]
 ```
 
-### Key Graph Nodes & Edges
+### Graph Nodes
 
-1. **`extract_intent_node`** â€” Extracts `location` and `activity` from the current query and prior conversational history (enabling session context retention across follow-ups like *"What about this evening instead?"*).
-2. **`fetch_weather_node`** â€” Calls Open-Meteo Geocoding API (`/v1/search`) and Forecast API (`/v1/forecast`) with required fields (`current=temperature_2m,wind_speed_10m,precipitation,uv_index...`). Sanitizes queries by stripping quotes and punctuation.
-3. **`route_after_weather`** *(Conditional Edge)*:
-   - If geocoding or weather API fails â†’ Routes to `render_weather_error` (honest failure response, no forecast guessing).
-   - If weather data is available â†’ Routes to `match_sop_node`.
-4. **`match_sop_node`** â€” Evaluates weather facts & query against all rules in `sops.json`. Ranks matches by severity (`CRITICAL` > `HIGH` > `MEDIUM` > `LOW`). Handles system-wide alerts (low-pressure systems).
-5. **`route_after_sop`** *(Conditional Edge)*:
-   - If SOP matches â†’ Routes to `generate_sop_response`.
-   - If NO SOP matches â†’ Routes to `render_no_sop` (honest response: *"We don't have policy guidance for that"*).
-6. **`generate_sop_response`** â€” LLM composes response citing exact weather stats and policy citation.
+| Node | Description |
+|------|-------------|
+| `extract_intent_node` | Extracts `location` and `activity` from the current query and prior conversation history. Enables session context retention for follow-ups. |
+| `fetch_weather_node` | Calls Open-Meteo Geocoding (`/v1/search`) and Forecast (`/v1/forecast`) APIs. Sanitizes city name inputs (strips quotes, punctuation). |
+| `match_sop_node` | Evaluates all rules in `sops.json` against weather facts and user intent. Ranks by severity: `CRITICAL > HIGH > MEDIUM > LOW`. |
+| `generate_sop_response` | LLM composes a grounded response citing exact weather stats and SOP policy reference. |
+| `render_weather_error` | Returns an honest failure message when the API or geocoding fails — no hallucinated forecast. |
+| `render_no_sop` | Returns an honest "no policy" message when no SOP matches — never invents generic advice. |
 
----
+### Conditional Edges
 
-## ðŸ“œ SOP Rule Set (`sops.json`)
-
-The rule set contains **11 SOPs** across **5 distinct categories**:
-
-1. **System-Wide Override**: `SOP-SYS-001` â€” Severe Low-Pressure / Cyclonic Storm Alert (overrides activity rules during heavy rain/squally winds).
-2. **Outdoor Exercise**: `SOP-EX-001` (High UV Index â‰¥ 8), `SOP-EX-002` (Extreme Heat â‰¥ 38Â°C), `SOP-EX-003` (High Wind Two-Wheeler / Cycling > 40 km/h), `SOP-EX-004` (Moderate Rain Trail Caution).
-3. **Travel & Commute**: `SOP-TR-001` (High Rain Probability > 70%), `SOP-TR-002` (Gale Gust Road Travel > 60 km/h).
-4. **Vulnerable Groups**: `SOP-VG-001` (Children/Elderly/Pets Cold Exposure â‰¤ 5Â°C), `SOP-VG-002` (Children/Elderly Heat & UV Protection â‰¥ 35Â°C).
-5. **Water & Marine**: `SOP-WS-001` (High Wind Open Water Safety > 30 km/h).
-6. **Fuzzy Non-Numeric**: `SOP-FZ-001` (Outdoor Picnic / Gathering Suitability based on composite rain, cloud cover, and wind conditions).
+| Edge | Condition | Routes To |
+|------|-----------|-----------|
+| `route_after_weather` | Weather fetch success | `match_sop_node` |
+| `route_after_weather` | Geocoding / API error | `render_weather_error` |
+| `route_after_sop` | SOP match found | `generate_sop_response` |
+| `route_after_sop` | No SOP matches | `render_no_sop` |
 
 ---
 
-## ðŸš€ Setup & Execution Guide
+## SOP Rule Set
 
-### Step 1: Navigate to Project Directory
+The rule set contains **11 SOPs** across **5 categories**, all stored in [`sops.json`](sops.json):
+
+| Category | SOP ID | Trigger Condition |
+|----------|--------|-------------------|
+| **System-Wide Override** | `SOP-SYS-001` | Severe low-pressure / cyclonic storm (overrides all activity rules) |
+| **Outdoor Exercise** | `SOP-EX-001` | UV Index >= 8 |
+| **Outdoor Exercise** | `SOP-EX-002` | Extreme heat >= 38°C |
+| **Outdoor Exercise** | `SOP-EX-003` | High wind for cycling / two-wheelers > 40 km/h |
+| **Outdoor Exercise** | `SOP-EX-004` | Moderate rain — trail caution |
+| **Travel & Commute** | `SOP-TR-001` | High rain probability > 70% |
+| **Travel & Commute** | `SOP-TR-002` | Gale gust road travel > 60 km/h |
+| **Vulnerable Groups** | `SOP-VG-001` | Cold exposure for children/elderly/pets <= 5°C |
+| **Vulnerable Groups** | `SOP-VG-002` | Heat & UV protection for children/elderly >= 35°C |
+| **Water & Marine** | `SOP-WS-001` | High wind on open water > 30 km/h |
+| **Fuzzy/Non-Numeric** | `SOP-FZ-001` | Outdoor picnic/gathering suitability (composite: rain + cloud + wind) |
+
+---
+
+## Setup & Installation
+
+### Prerequisites
+
+- Python 3.10+
+- A free [Groq API key](https://console.groq.com/)
+
+### Step 1 — Clone the Repository
+
 ```bash
-cd Weather_Advisor_bot
+git clone https://github.com/tanmayvarshney-code/Weather-Advisory-Bot.git
+cd Weather-Advisory-Bot
 ```
 
-### Step 2: Set Up Environment File (`.env`)
-Create or edit the `.env` file in the root directory and paste your Groq API Key:
+### Step 2 — Create the Environment File
+
+Copy the template and add your Groq API key:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
 ```env
 GROQ_API_KEY=gsk_your_groq_api_key_here
 ```
 
-### Step 3: Install Dependencies
+### Step 3 — Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 4: Run the Streamlit Chat Frontend
+---
+
+## Running the App
+
+### Streamlit Chat Frontend
+
 ```bash
 streamlit run app.py
 ```
+
 Open your browser at `http://localhost:8501`.
 
-### Step 5: Run the Evaluation Suite
+**Example queries:**
+- *"Is it safe to go cycling in Mumbai right now?"*
+- *"Should I take my toddler for a walk in Delhi today?"*
+- *"Is the weather okay for a picnic in Bangalore?"*
+- *"Can I go kayaking in Chennai?"*
+
+---
+
+## Evaluation Suite
+
+Run the full automated evaluation suite:
+
 ```bash
 python eval_suite.py
 ```
 
----
+### Test Results
 
-## ðŸ§ª Evaluation Suite Results (`eval_suite.py`)
+| Test | Description | Result |
+|------|-------------|--------|
+| **1.1** | Standard SOP match — High UV cycling (UV=9.5, Bhopal) | `PASS` |
+| **1.2** | Standard SOP match — High wind cycling (Wind=46 km/h, Mumbai) | `PASS` |
+| **2.1** | Paraphrased intent — *"pedal push midday"* | `PASS` |
+| **2.2** | Paraphrased intent — Toddler stroll in 37.5°C heat | `PASS` |
+| **3.0** | Severe weather system with real API numbers (rain=18.5 mm) | `PASS` |
+| **4.0** | No SOP applies — Indoor chess | `PASS` |
+| **5.0** | Unreachable API / invalid location | `PASS` |
+| **6.0** | Adversarial prompt injection resistance | `PASS` |
 
-| Test Case | Description | Result | Rationale / Verification |
-| :--- | :--- | :---: | :--- |
-| **Test 1.1** | Standard SOP Match (High UV Cycling) | `PASS` | Triggers `SOP-EX-001` correctly for UV=9.5 in Bhopal. |
-| **Test 1.2** | Standard SOP Match (High Wind Cycling) | `PASS` | Triggers `SOP-EX-003` correctly for Wind=46 km/h in Mumbai. |
-| **Test 2.1** | Paraphrased Intent ("pedal push midday") | `PASS` | Intent extraction routes paraphrased query to outdoor exercise and UV rule. |
-| **Test 2.2** | Paraphrased Intent (Toddler stroll in 37.5Â°C heat) | `PASS` | Matches `SOP-VG-002` for vulnerable group heat protection. |
-| **Test 3.0** | Severe Weather System & Real API Numbers | `PASS` | Triggers `SOP-SYS-001` and grounds response in exact rain (18.5 mm) & wind numbers. |
-| **Test 4.0** | No SOP Applies (Indoor Chess) | `PASS` | States plainly: *"We don't have standard safety guidance for indoor chess."* |
-| **Test 5.0** | Unreachable Weather API / Invalid Location | `PASS` | Fails honestly: *"Unable to retrieve weather data."* No hallucinated forecasts. |
-| **Test 6.0** | Adversarial Prompt Injection Resistance | `PASS` | Refuses fake policy `SOP-SAFE-999` attempt and enforces real `SOP-EX-003`. |
-
-### ðŸ“ Notes on Weather Variability & System Limits
-- **Weather Dynamics**: Regional rain systems (like monsoon low-pressure systems) shift daily. To guarantee deterministic evaluation over time, `eval_suite.py` includes simulated payload overrides alongside live API calls so severe weather rules are reliably verified regardless of real-time weather changes.
-- **Location Name Input Handling**: Geocoding requires clean city names. Inputs containing extraneous quotes or punctuation (e.g. `"delhi"`) are automatically sanitized before querying the Open-Meteo API.
+> **Note on weather variability:** Regional conditions (e.g. monsoon systems) change daily. The suite uses simulated payload overrides alongside live API calls to guarantee deterministic results for severe-weather SOP verification regardless of actual real-time conditions.
 
 ---
 
-## ðŸ’¡ Adding a New SOP Live (No Code Change Required)
+## Adding a New SOP
 
-To add a new SOP rule without touching any code:
-1. Open `sops.json`.
-2. Add a new JSON object to the `"sops"` array.
-3. Save the file. The `sop_engine.py` reloads `sops.json` dynamically on every query. **Zero code edits required.**
+No code changes are required. Simply edit `sops.json`:
 
+1. Open `sops.json`
+2. Add a new JSON object to the `"sops"` array following the existing schema
+3. Save the file
+
+The `sop_engine.py` reloads `sops.json` dynamically on every query. **Zero restart or code edits required.**
+
+**Example SOP schema:**
+
+```json
+{
+  "id": "SOP-EX-005",
+  "category": "outdoor_exercise",
+  "severity": "MEDIUM",
+  "title": "High Humidity Warning",
+  "description": "Relative humidity above 85% makes outdoor exercise uncomfortable and potentially dangerous.",
+  "conditions": {
+    "relative_humidity_2m": { "gte": 85 }
+  },
+  "keywords": ["exercise", "run", "jog", "walk", "outdoor"],
+  "advice": "High humidity detected. Take frequent breaks, stay hydrated, and prefer early morning or late evening exercise."
+}
+```
+
+---
+
+## Project Structure
+
+```
+Weather-Advisory-Bot/
+├── agent.py            # LangGraph state graph — core agent logic
+├── app.py              # Streamlit chat frontend
+├── eval_suite.py       # Automated evaluation suite (8 test cases)
+├── sop_engine.py       # Deterministic SOP evaluation engine
+├── sops.json           # SOP policy data (11 rules, 5 categories)
+├── weather_service.py  # Open-Meteo API wrapper (geocoding + forecast)
+├── requirements.txt    # Python dependencies
+├── .env.example        # Environment variable template
+├── CONTRIBUTING.md     # Contribution guide
+├── CHANGELOG.md        # Release history
+└── LICENSE             # MIT License
+```
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
+
+1. Fork the repo and create a branch: `git checkout -b feat/your-feature`
+2. Install dependencies and copy `.env.example` to `.env`
+3. Make your changes
+4. Run `python eval_suite.py` — all 8 tests must pass
+5. Open a pull request with a clear description
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
