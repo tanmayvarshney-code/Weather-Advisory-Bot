@@ -1,3 +1,20 @@
+"""
+agent.py
+--------
+LangGraph-based Weather Advisory Agent.
+
+Graph nodes:
+  - extract_intent_node   : Parse location & activity from conversation history
+  - fetch_weather_node    : Fetch live weather via Open-Meteo API
+  - match_sop_node        : Evaluate weather facts against sops.json rules
+  - generate_sop_response : Compose grounded LLM response from SOP match
+  - render_weather_error  : Return honest failure message (no hallucinated forecast)
+  - render_no_sop         : Return honest "no policy" message when no SOP matches
+
+Conditional edges:
+  - route_after_weather   : Success -> match_sop_node | Error -> render_weather_error
+  - route_after_sop       : Match  -> generate_sop_response | No match -> render_no_sop
+"""
 import os
 import json
 from typing import Dict, Any, List, Optional, TypedDict
