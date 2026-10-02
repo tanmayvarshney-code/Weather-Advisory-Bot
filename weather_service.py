@@ -1,6 +1,18 @@
+"""
+weather_service.py
+------------------
+Open-Meteo API wrapper providing geocoding and live weather data retrieval.
+
+All external API calls are isolated here so the agent layer remains fully
+testable via mock overrides without hitting the network.
+"""
 import requests
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
+
+# Timeout constants (seconds)
+GEOCODE_TIMEOUT = 5
+FORECAST_TIMEOUT = 7
 
 class WeatherData(BaseModel):
     location_name: str
@@ -43,7 +55,7 @@ def geocode_city(city_name: str) -> Optional[Dict[str, Any]]:
     }
 
     try:
-        response = requests.get(url, params=params, timeout=5)
+        response = requests.get(url, params=params, timeout=GEOCODE_TIMEOUT)
         if response.status_code != 200:
             return None
         
@@ -96,7 +108,7 @@ def fetch_live_weather(city_name: str, mock_failure: bool = False) -> WeatherFet
     }
 
     try:
-        resp = requests.get(forecast_url, params=params, timeout=7)
+        resp = requests.get(forecast_url, params=params, timeout=FORECAST_TIMEOUT)
         if resp.status_code != 200:
             return WeatherFetchResult(
                 success=False,
