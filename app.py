@@ -1,3 +1,11 @@
+"""
+app.py
+------
+Streamlit chat frontend for the Weather Advisory Bot.
+
+Runs the LangGraph agent and renders weather advice in a conversational UI
+with session memory, live weather panels, and SOP citation display.
+"""
 import os
 import json
 import streamlit as st
@@ -10,7 +18,7 @@ from weather_service import fetch_live_weather
 
 # Page configuration
 st.set_page_config(
-    page_title="MediBuddy Weather Advisory Support Bot",
+    page_title="Weather Advisory Bot",
     page_icon="🌤️",
     layout="wide"
 )
