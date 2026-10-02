@@ -1,3 +1,21 @@
+﻿"""
+eval_suite.py
+-------------
+Comprehensive evaluation suite for the Weather Advisory Bot.
+
+Test coverage:
+  Test 1.1 - Standard SOP match: High UV cycling
+  Test 1.2 - Standard SOP match: High wind cycling
+  Test 2.1 - Paraphrased intent: pedal push midday
+  Test 2.2 - Paraphrased intent: toddler stroll in extreme heat
+  Test 3.0 - Severe weather system with real API numbers
+  Test 4.0 - No SOP applies (indoor chess)
+  Test 5.0 - Unreachable weather API / invalid location
+  Test 6.0 - Adversarial prompt injection resistance
+
+Run with: python eval_suite.py
+All tests must pass before submitting a pull request.
+"""
 import os
 import json
 from dotenv import load_dotenv
@@ -97,7 +115,7 @@ def run_evaluation():
     # -------------------------------------------------------------------------
     print_separator()
     print("[TEST 2.2] Paraphrased Query - Vulnerable Group Heat Exposure")
-    print("Objective: Test phrasing 'taking my toddler for a stroll at the local park in 37°C heat'.")
+    print("Objective: Test phrasing 'taking my toddler for a stroll at the local park in 37Â°C heat'.")
     test_2_2_override = {
         "location_name": "Delhi, India", "latitude": 28.61, "longitude": 77.20,
         "temperature_2m": 37.5, "wind_speed_10m": 10.0, "wind_gusts_10m": 14.0,
@@ -116,7 +134,7 @@ def run_evaluation():
     print(f"Matched Citation: {cit_2_2}")
     print(f"Response Preview: {resp_2_2[:180]}...")
     print(f"RESULT: {'[PASS]' if pass_2_2 else '[FAIL]'}")
-    results.append(("Test 2.2: Paraphrased Vulnerable Group Heat", pass_2_2, "Matched SOP-VG-002 for toddler park stroll under 37.5°C"))
+    results.append(("Test 2.2: Paraphrased Vulnerable Group Heat", pass_2_2, "Matched SOP-VG-002 for toddler park stroll under 37.5Â°C"))
 
     # -------------------------------------------------------------------------
     # TEST CASE 3: Severe Live Weather Conditions
@@ -231,3 +249,4 @@ def run_evaluation():
 
 if __name__ == "__main__":
     run_evaluation()
+
