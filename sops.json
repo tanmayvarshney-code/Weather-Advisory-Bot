@@ -1,0 +1,161 @@
+{
+  "sops": [
+    {
+      "id": "SOP-SYS-001",
+      "title": "Severe Low-Pressure / Cyclonic Storm Alert",
+      "category": "system_alert",
+      "severity": "CRITICAL",
+      "description": "Triggered during severe weather systems with heavy rainfall, squally winds, or thunderstorm weather codes. Overrides activity-specific rules.",
+      "activity_keywords": ["all", "outdoor", "cycling", "travel", "hiking", "walking", "picnic", "sports", "commute", "park"],
+      "is_system_wide": true,
+      "numeric_rules": {
+        "precipitation": {"gte": 15.0},
+        "wind_gusts_10m": {"gte": 55.0}
+      },
+      "weather_code_triggers": [80, 81, 82, 95, 96, 99],
+      "prescribed_guidance": "A severe regional low-pressure/cyclonic rain system is active with dangerous precipitation or gusty winds. All non-essential outdoor activities must be suspended immediately due to risk of flash flooding, severe waterlogging, and falling debris.",
+      "citation": "Policy SOP-SYS-001: Severe Regional Weather System Emergency Protocol"
+    },
+    {
+      "id": "SOP-EX-001",
+      "title": "High UV Outdoor Exercise Safety",
+      "category": "outdoor_exercise",
+      "severity": "HIGH",
+      "description": "Applies when UV index is 8 or higher during peak hours (11am-4pm).",
+      "activity_keywords": ["cycling", "bike", "biking", "running", "jogging", "exercise", "workout", "sports", "football", "cricket", "trekking", "pedal push", "pedal", "outdoor push", "midday sun"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "uv_index": {"gte": 8.0}
+      },
+      "prescribed_guidance": "Advise against unprotected strenuous outdoor exercise between 11 AM and 4 PM due to extreme UV exposure hazard. Recommend applying broad-spectrum sunscreen (SPF 30+) and rescheduling heavy workouts to early morning or evening.",
+      "citation": "Policy SOP-EX-001: Extreme UV Index Outdoor Exercise Safety"
+    },
+    {
+      "id": "SOP-EX-002",
+      "title": "Extreme Heat Exposure Advisory",
+      "category": "outdoor_exercise",
+      "severity": "HIGH",
+      "description": "Applies when ambient temperature exceeds 38°C during outdoor activities.",
+      "activity_keywords": ["exercise", "running", "jogging", "cycling", "bike", "sports", "hiking", "trekking", "outdoor workout"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "temperature_2m": {"gte": 38.0}
+      },
+      "prescribed_guidance": "Extreme high ambient temperatures increase heat exhaustion and heatstroke risks. Advise postponing intense physical exercise outdoors, staying hydrated, and seeking air-conditioned environments.",
+      "citation": "Policy SOP-EX-002: Extreme Heat Physical Exertion Safety"
+    },
+    {
+      "id": "SOP-EX-003",
+      "title": "High Wind Two-Wheeler & Cycling Safety",
+      "category": "outdoor_exercise",
+      "severity": "HIGH",
+      "description": "Applies when wind speeds exceed 40 km/h and user mentions cycling or two-wheelers.",
+      "activity_keywords": ["cycling", "bike", "biking", "bicycle", "scooter", "motorcycle", "two-wheeler"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "wind_speed_10m": {"gte": 40.0}
+      },
+      "prescribed_guidance": "High winds exceeding 40 km/h represent a serious mechanical stability risk for two-wheelers, not just a comfort issue. Advise against cycling or riding motorcycles, as crosswinds can cause loss of vehicle control.",
+      "citation": "Policy SOP-EX-003: Two-Wheeler Wind Instability Safety Protocol"
+    },
+    {
+      "id": "SOP-EX-004",
+      "title": "Moderate Rainfall Outdoor Trail Safety",
+      "category": "outdoor_exercise",
+      "severity": "MEDIUM",
+      "description": "Applies during moderate rain (1.0 - 5.0 mm) for trekking, running, or hiking.",
+      "activity_keywords": ["hiking", "trekking", "running", "jogging", "walk", "trail"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "precipitation": {"gte": 1.0, "lt": 5.0}
+      },
+      "prescribed_guidance": "Moderate rainfall creates slippery, muddy trail conditions and reduced visibility. Exercise caution, wear high-traction waterproof footwear, use high-visibility gear, and avoid steep unpaved paths.",
+      "citation": "Policy SOP-EX-004: Moderate Rain Trail & Jogging Caution"
+    },
+    {
+      "id": "SOP-TR-001",
+      "title": "High Precipitation Travel & Commute Advisory",
+      "category": "travel_and_commute",
+      "severity": "MEDIUM",
+      "description": "Applies when precipitation probability is 70% or higher or hourly rain exceeds 5 mm for travel questions.",
+      "activity_keywords": ["travel", "commute", "driving", "drive", "road trip", "flight", "bus", "train", "work commute"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "precipitation_probability": {"gte": 70.0}
+      },
+      "prescribed_guidance": "High precipitation likelihood (>70%) increases risks of urban waterlogging, reduced braking efficiency, and road commute delays. Advise allowing extra travel time, checking official transit alerts before departure, and maintaining increased vehicle safe distance.",
+      "citation": "Policy SOP-TR-001: Heavy Rain Travel & Commute Safety Protocol"
+    },
+    {
+      "id": "SOP-TR-002",
+      "title": "Gale Gust Road Travel Risk",
+      "category": "travel_and_commute",
+      "severity": "CRITICAL",
+      "description": "Applies when wind gusts exceed 60 km/h during road travel or highway commutes.",
+      "activity_keywords": ["travel", "commute", "driving", "drive", "road trip", "highway"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "wind_gusts_10m": {"gte": 60.0}
+      },
+      "prescribed_guidance": "Dangerous severe wind gusts (>60 km/h) present high risks of falling trees, downed power lines, and loss of high-profile vehicle control. Strongly advise deferring non-essential road travel until gusts subside.",
+      "citation": "Policy SOP-TR-002: Gale Force Gust Road Travel Emergency Guidance"
+    },
+    {
+      "id": "SOP-VG-001",
+      "title": "Vulnerable Groups Extreme Cold Exposure",
+      "category": "vulnerable_groups",
+      "severity": "HIGH",
+      "description": "Applies when temperature drops to 5°C or below for queries involving children, elderly, or pets.",
+      "activity_keywords": ["kid", "kids", "child", "children", "baby", "toddler", "elderly", "senior", "grandparents", "dog", "cat", "pet", "pets", "park"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "temperature_2m": {"lte": 5.0}
+      },
+      "prescribed_guidance": "Freezing or near-freezing temperatures (<5°C) pose hypothermia and cold-stress risks for children, elderly individuals, and pets. Advise strictly minimizing outdoor exposure, dressing in insulated layers, and keeping domestic pets indoors.",
+      "citation": "Policy SOP-VG-001: Vulnerable Groups Cold Weather Protection Protocol"
+    },
+    {
+      "id": "SOP-VG-002",
+      "title": "Vulnerable Groups High Heat & UV Protection",
+      "category": "vulnerable_groups",
+      "severity": "MEDIUM",
+      "description": "Applies when UV >= 7 or Temperature >= 35°C for queries involving children, elderly, or pets.",
+      "activity_keywords": ["kid", "kids", "child", "children", "baby", "toddler", "elderly", "senior", "pet", "pets", "park", "playground"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "temperature_2m": {"gte": 35.0}
+      },
+      "prescribed_guidance": "High heat conditions pose rapid dehydration and heat exhaustion risks for vulnerable groups. Advise keeping children and elderly indoors during peak heat, maintaining high fluid intake, and ensuring pets have access to shade and fresh water.",
+      "citation": "Policy SOP-VG-002: Vulnerable Groups Heat Stress Prevention"
+    },
+    {
+      "id": "SOP-WS-001",
+      "title": "Water & Marine Safety High Wind Advisory",
+      "category": "water_and_coastal",
+      "severity": "HIGH",
+      "description": "Applies when wind speed exceeds 30 km/h or rain > 2 mm for boating, swimming, or water activities.",
+      "activity_keywords": ["swimming", "swim", "boating", "boat", "kayaking", "sailing", "beach", "lake", "river"],
+      "is_system_wide": false,
+      "numeric_rules": {
+        "wind_speed_10m": {"gte": 30.0}
+      },
+      "prescribed_guidance": "Wind speeds above 30 km/h generate dangerous surface chop, strong currents, and unstable vessel conditions. Advise cancelling all open water swimming, kayaking, and recreational boating activities immediately.",
+      "citation": "Policy SOP-WS-001: Coastal & Open Water Activity Safety Standard"
+    },
+    {
+      "id": "SOP-FZ-001",
+      "title": "Fuzzy Advisory: Outdoor Picnic & Social Event Feasibility",
+      "category": "general_outdoor_fuzzy",
+      "severity": "MEDIUM",
+      "description": "Fuzzy non-numeric scenario checking overall weather suitability for picnics, outdoor gatherings, or park outings.",
+      "activity_keywords": ["picnic", "gathering", "outdoor event", "barbecue", "bbq", "park visit", "party outdoor"],
+      "is_system_wide": false,
+      "fuzzy_condition": {
+        "rule_description": "Picnic/Outdoor gathering is unsafe or unpleasantly unfeasible if ANY of the following composite conditions occur: precipitation > 0.5 mm, OR precipitation probability >= 50%, OR wind speed > 25 km/h, OR overcast cloud cover > 85%.",
+        "eval_logic": "composite_picnic"
+      },
+      "prescribed_guidance": "Outdoor picnics and social gatherings require clear, dry conditions and moderate winds. If rain risk, overcast gloom, or strong winds threaten comfort and safety, advise opting for a covered outdoor pavilion or indoor alternative venue.",
+      "citation": "Policy SOP-FZ-001: Outdoor Social Gathering Weather Suitability Guideline"
+    }
+  ]
+}
